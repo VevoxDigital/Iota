@@ -8,17 +8,32 @@ const discord = require('discord.js'),
 global.SRCDIR  = __dirname;
 global.ROOTDIR = path.join(SRCDIR, '..');
 
+try {
+  let stats = fs.statSync(path.join(ROOTDIR, 'config.json'));
+  if (!stats.isFile()) throw new Error();
+} catch (e) {
+  try {
+    fs.copySync(path.join(ROOTDIR, 'config.default.json'), path.join(ROOTDIR, 'config.json'));
+  } catch (e2) {
+    console.error('Failed to copy config defaults');
+    console.error(e.stack);
+    return;
+  }
+}
+
 config.argv().env().file({ file: path.join(ROOTDIR, 'config.json') });
 
 global.Bot = new discord.Client();
 
 Bot.on('ready', () => {
+  config.defaults({ 'clientID': Bot.id });
+
   require('./commands');
   console.log('Bot ready');
 });
 
 Bot.on('message', msg => {
-  let pattern = new RegExp(`^(?:${config.get('prefix')}|<@${config.get('clientID')}>)[,:;]? `, 'i'),
+  let pattern = new RegExp(`^(?:${config.get('commands:prefix')}|<@${config.get('clientID')}>)[,:;]? `, 'i'),
     match = msg.content.match(pattern);
 
   if (!match) return;
@@ -49,10 +64,16 @@ Bot.on('message', msg => {
 });
 
 Bot.acknowledge = () => {
-  let acknowledgements = config.get('acknowledgements');
+  let acknowledgements = config.get('commands:acknowledgements');
   return acknowledgements[Math.floor(Math.random() * acknowledgements.length)];
 };
 Bot.ack = Bot.acknowledge;
+
+Bot.saveConfig = () => {
+  config.save(err => {
+    console.error(err.stack);
+  });
+}
 
 Bot.registerCommand = (cmd, opts, cb) => {
   if (typeof opts === 'function') {
@@ -66,15 +87,9 @@ Bot.registerCommand = (cmd, opts, cb) => {
   Bot.$cmds.push({ cmd: cmd, opts: opts, cb: cb });
 };
 
-fs.readFile(path.join(ROOTDIR, '.token'), (err, token) => {
+let token = config.get('token') || '';
 
-  if (err) return console.error(err.stack);
+if (!token || !token.match(/^[A-Z0-9]{24}\.[A-Z0-9]{6}\.[A-Z0-9]{27}$/i))
+  return console.error('Token does not match format');
 
-  token = token ? token.toString().trim() : '';
-
-  if (!token || !token.match(/^[A-Z0-9]{24}\.[A-Z0-9]{6}\.[A-Z0-9]{27}$/i))
-    return console.error('Token does not match format');
-
-  Bot.login(token);
-
-});
+Bot.login(token);
