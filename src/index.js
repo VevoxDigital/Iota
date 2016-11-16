@@ -77,7 +77,7 @@ Bot.saveConfig = () => {
 };
 
 Bot.configDir = (guild, mod) => {
-  return 'modules:' + guild.id + ':' + mod;
+  return 'modules:' + guild.id + ':' + mod + ':';
 };
 
 Bot.registerCommand = (cmd, opts, cb) => {
