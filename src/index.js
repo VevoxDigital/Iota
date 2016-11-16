@@ -13,6 +13,7 @@ config.argv().env().file({ file: path.join(ROOTDIR, 'config.json') });
 global.Bot = new discord.Client();
 
 Bot.on('ready', () => {
+  require('./commands');
   console.log('Bot ready');
 });
 
@@ -23,8 +24,47 @@ Bot.on('message', msg => {
   if (!match) return;
 
   let cmd = msg.content.substring(match.index + match[0].length);
-  console.log(' > ' + cmd);
+  if (Bot.$cmds) {
+    let found = false;
+    for (const c of Bot.$cmds) {
+      let match = cmd.match(c.cmd);
+      if (!match) continue;
+
+      found = true;
+      let args = { cmd: match };
+      for (const opt in c.opts) {
+        let match = cmd.match(c.opts[opt]);
+        if (match) args[opt] = match;
+      }
+
+      msg.content = cmd;
+      try {
+        c.cb(msg, args);
+      } catch (e) {
+        msg.channel.sendMessage('Sorry, something went wrong: `' + e.toString() + '`');
+      }
+    }
+    if (!found) msg.channel.sendMessage('Sorry, I do not know how to do that');
+  } else msg.channel.sendMessage('Command registry missing: were any commands loaded?');
 });
+
+Bot.acknowledge = () => {
+  let acknowledgements = config.get('acknowledgements');
+  return acknowledgements[Math.floor(Math.random() * acknowledgements.length)];
+};
+Bot.ack = Bot.acknowledge;
+
+Bot.registerCommand = (cmd, opts, cb) => {
+  if (typeof opts === 'function') {
+    cb = opts;
+    opts = { };
+  }
+  if (typeof cmd !== 'object') throw new Error('Command must be a regular expression');
+
+  Bot.$cmds = Bot.$cmds || [];
+
+  Bot.$cmds.push({ cmd: cmd, opts: opts, cb: cb });
+};
 
 fs.readFile(path.join(ROOTDIR, '.token'), (err, token) => {
 
