@@ -1,6 +1,8 @@
 {
-  "clientID": "248532537213845504",
-  "prefix": "Iota",
-  "allowMentionPrefix": true,
-  "acknowledgements": [ "Okay.", "Got it.", "Acknowledged.", "Understood.", "Confirmed." ]
+  "token": "your.token.here",
+  "commands": {
+    "prefix": "Iota",
+    "acknowledgements": [ "Okay.", "Got it.", "Acknowledged.", "Understood.", "Confirmed." ]
+  },
+  "modules": { }
 }
