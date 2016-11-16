@@ -68,12 +68,17 @@ Bot.acknowledge = () => {
   return acknowledgements[Math.floor(Math.random() * acknowledgements.length)];
 };
 Bot.ack = Bot.acknowledge;
+Bot.config = config;
 
 Bot.saveConfig = () => {
   config.save(err => {
     console.error(err.stack);
   });
-}
+};
+
+Bot.configDir = (guild, mod) => {
+  return 'modules:' + guild.id + ':' + mod;
+};
 
 Bot.registerCommand = (cmd, opts, cb) => {
   if (typeof opts === 'function') {

@@ -24,7 +24,10 @@ exports.install = () => {
           limit: channel.userLimit
         };
     });
-    msg.channel.sendCode('json', JSON.stringify(voiceChannels, null, '\t'));
+    msg.channel.sendCode('json', JSON.stringify({
+      server: msg.guild.id,
+      voice: voiceChannels
+    }, null, '\t'));
 
   });
 
