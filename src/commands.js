@@ -5,7 +5,6 @@ const fs    = require('fs-extra'),
 
 const MODULES_DIR = path.join(__dirname, 'modules');
 
-console.log('walking modules...');
 var modules = [];
 fs.walk(MODULES_DIR)
   .on('data', item => {
@@ -13,11 +12,14 @@ fs.walk(MODULES_DIR)
       modules.push(require(item.path));
   }).on('end', () => {
 
-    console.log(`found ${modules.length} module(s) to load`);
+    console.log(`loading ${modules.length} module(s)...`);
 
     modules.forEach(mod => {
 
       console.log(' > ' + mod.name + ' - ' + mod.desc);
+
+      // TODO Set up docs/readme for module.
+      mod.install();
 
     });
 
