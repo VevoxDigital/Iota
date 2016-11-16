@@ -4,5 +4,6 @@
     "prefix": "Iota",
     "acknowledgements": [ "Okay.", "Got it.", "Acknowledged.", "Understood.", "Confirmed." ]
   },
+  "admins": [ "153269807213576192" ],
   "modules": { }
 }
