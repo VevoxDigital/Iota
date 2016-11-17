@@ -39,6 +39,7 @@ Bot.on('message', msg => {
   if (!match) return;
 
   let cmd = msg.content.substring(match.index + match[0].length);
+  cmd = cmd.trim();
   if (Bot.$cmds) {
     let found = false;
     for (const c of Bot.$cmds) {
@@ -72,8 +73,14 @@ Bot.config = config;
 
 Bot.saveConfig = () => {
   config.save(err => {
-    console.error(err.stack);
+    if (err) console.error(err.stack);
   });
+};
+
+Bot.isAdmin = (user, guild) => {
+  let admins = config.get('admins');
+  if (guild) admins = admins.concat(config.get(Bot.configDir(guild, 'admin') + 'admins') || []);
+  return admins.indexOf(user.id) >= 0;
 };
 
 Bot.configDir = (guild, mod) => {
