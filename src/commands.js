@@ -15,10 +15,10 @@ fs.walk(MODULES_DIR)
     console.log(`loading ${modules.length} module(s)...`);
 
     modules.forEach(mod => {
+      if (!mod.name || !mod.desc)
+        return console.log('Attempted to load module with missing name or description');
 
-      console.log(' > ' + mod.name + ' - ' + mod.desc);
-
-      // TODO Set up docs/readme for module.
+      console.log('* loaded: ' + mod.name + ' - ' + mod.desc);
       mod.install();
 
     });
