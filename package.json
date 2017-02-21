@@ -13,12 +13,21 @@
   },
   "author": "Vevox Digital",
   "license": "GPL-3.0",
+  "standard": {
+    "globals": [
+      "Bot",
+      "Client",
+      "Utils"
+    ]
+  },
   "bugs": {
     "url": "https://github.com/VevoxDigital/Ryana/issues"
   },
   "homepage": "https://github.com/VevoxDigital/Ryana#readme",
   "dependencies": {
+    "discord.js": "^11.0.0",
     "fs-extra": "^1.0.0",
+    "lodash": "^4.17.4",
     "nconf": "^0.8.4",
     "path": "^0.12.7"
   }
