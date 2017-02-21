@@ -175,7 +175,7 @@ class Module {
             else if (typeof res === 'string') msg.channel.sendMessage(this.ack())
           } catch (e) {
             msg.channel.sendMessage('I cannot complete this task.')
-            msg.channel.sendCode(e.stack)
+            msg.channel.sendCode('plain', e.stack)
           }
         }
       })

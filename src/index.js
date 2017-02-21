@@ -35,6 +35,7 @@ Bot.saveConfig = () => {
 // Start registering commands here
 
 Bot.registerModule('general')
+Bot.registerModule('audio')
 
 // Login stuff
 
