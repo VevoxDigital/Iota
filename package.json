@@ -26,9 +26,13 @@
   "homepage": "https://github.com/VevoxDigital/Ryana#readme",
   "dependencies": {
     "discord.js": "^11.0.0",
+    "erlpack": "^0.1.2",
     "fs-extra": "^1.0.0",
     "lodash": "^4.17.4",
     "nconf": "^0.8.4",
-    "path": "^0.12.7"
+    "node-opus": "^0.2.4",
+    "path": "^0.12.7",
+    "q": "^1.5.0",
+    "uws": "^0.13.0"
   }
 }

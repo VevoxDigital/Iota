@@ -25,6 +25,7 @@ try {
 config.argv().env().file({ file: path.join(ROOTDIR, 'config.json') })
 
 global.Bot = new Client.IotaClient(config)
+Bot.app = require('../package.json')
 
 Bot.saveConfig = () => {
   config.save(err => {

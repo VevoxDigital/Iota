@@ -3,6 +3,7 @@
 const discord = require('discord.js')
 const path = require('path')
 const _ = require('lodash')
+const q = require('q')
 
 const assert = require('assert')
 
@@ -17,6 +18,8 @@ class IotaClient extends discord.Client {
   /**
     * @constructor
     * Constructs a new IotaClient
+    *
+    * @param {object} config Client configuration
     */
   constructor (config) {
     super()
@@ -37,28 +40,61 @@ class IotaClient extends discord.Client {
   }
 
   /**
-    * @method send
+    * @method
     * Sends a message to the bot to handle.
     *
-    * @param msg The message
+    * @param {string} msg The message
     * @return IotaClient
     */
   send (msg) {
+    let promises = [ ]
+
     _.each(this._modules, m => {
-      m._deligate(msg)
+      promises = promises.concat(m._deligate(msg))
     })
 
-    return this
+    q.allSettled(promises).then(results => {
+      if (results.length) {
+        let messages = [ ]
+
+        _.each(results, res => {
+          if (res.state === 'fulfilled') {
+            if (res.value) messages.push(res.value)
+          } else {
+            const e = res.reason
+
+            const modName = e.module.constructor.name
+            const cmdName = e.command.constructor.name
+
+            const error = new discord.RichEmbed()
+              .setTitle('Internal error encountered during task execution')
+              .setColor(0xE74C3C)
+              // TODO Set footer to current version info .setFooter()
+              .addField('Message', e.error.message, true)
+              .addField('Type', e.error.constructor.name, true)
+              .addField('Source', `${modName.substring(0, modName.length - 6)}.${cmdName.substring(0, cmdName.length - 7)}`, true)
+              .addField('Stack Trace', '```' + e.error.stack + '```')
+
+            msg.channel.sendEmbed(error)
+          }
+        })
+
+        if (messages.length) _.each(messages, m => { msg.channel.send(m) })
+        else msg.channel.send(this.ack())
+      } else {
+        msg.channel.send('I\'m not sure how to do that.')
+      }
+    })
   }
 
   /**
-    * @method ack
+    * @method
     * Gets a generic acknowledgement
     *
-    * @return string An acknowledgement
+    * @return {string} An acknowledgement
     */
   ack () {
-    let acks = this.config.get('commands:acknowledgements')
+    let acks = this.config.get('commands:acknowledgements') || [ '...' ]
     return acks[Math.floor(Math.random() * acks.length)]
   }
 
@@ -150,10 +186,11 @@ class Module {
     * @constructor
     * Constructs a new module with the given commands
     *
-    * @param name     The module's internal name
-    * @param commands The commands to register
+    * @param {string} name     The module's internal name
+    * @param {Array}  commands The commands to register
     */
   constructor (name, cmds) {
+    assert.strictEqual(typeof name, 'string')
     assert.ok(cmds instanceof Array, 'Commands list must be an array')
 
     if (!_.every(cmds, p => { return p instanceof Command })) {
@@ -165,21 +202,22 @@ class Module {
   }
 
   _deligate (msg) {
+    let promises = [ ]
+
     _.each(this._commands, c => {
       _.each(c._patterns, (p, i) => {
         let match = msg.content.match(p)
         if (match) {
           try {
-            let res = c.handle(msg, match, i)
-            if (res) msg.channel.sendMessage(res)
-            else if (typeof res === 'string') msg.channel.sendMessage(this.ack())
+            promises.push(q(c.handle(msg, match, i)))
           } catch (e) {
-            msg.channel.sendMessage('I cannot complete this task.')
-            msg.channel.sendCode('plain', e.stack)
+            promises.push(q.reject({ module: this, command: c, error: e }))
           }
         }
       })
     })
+
+    return promises
   }
 }
 exports.Module = Module
