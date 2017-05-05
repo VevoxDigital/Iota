@@ -138,7 +138,7 @@ class PlayingCommand extends Client.Command {
       const info = song.info
       return new discord.RichEmbed()
         .setTitle(info.title)
-        .setDescription(info.description.length > 200 ? info.description(0, 200) + '...' : info.description)
+        .setDescription(info.description.length > 200 ? info.description.substring(0, 200) + '...' : info.description)
         .setThumbnail(info.thumbnail)
         .setURL(info.link)
         .setFooter('Video ID: ' + info.id)
