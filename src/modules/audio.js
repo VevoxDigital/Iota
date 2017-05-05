@@ -99,7 +99,7 @@ class PlayCommand extends Client.Command {
 
         dispatcher.on('end', () => {
           dispatcher = undefined
-          this.playNext(queue[id].shift().msg)
+          if (queue[id].length) this.playNext(queue[id].shift().msg)
         })
       } else {
         // leave if there are no songs left in queue
@@ -177,13 +177,28 @@ class QueueCommand extends Client.Command {
   }
 }
 
+class SkipCommand extends Client.Command {
+  constructor () {
+    super(/^skip$/i)
+
+    this.usage = 'skip'
+    this.desc = 'Skips the current song'
+  }
+
+  handle (msg) {
+    dispatcher.end()
+    return Bot.ack() + (queue[msg.channel.guild.id].length ? '' : ' No songs left in queue.')
+  }
+}
+
 exports = module.exports = class AudioModule extends Client.Module {
   constructor () {
     super('audio', [
       // new SummonCommand(),
       new PlayCommand(),
       new PlayingCommand(),
-      new QueueCommand()
+      new QueueCommand(),
+      new SkipCommand()
     ])
 
     this.displayName = 'Audio'
