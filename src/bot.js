@@ -28,7 +28,7 @@ class IotaClient extends discord.Client {
       Object.defineProperty(this, 'id', { value: this.user.id })
     })
     this.on('message', msg => {
-      let match = msg.content.match(new RegExp(`^<@${this.id}>[,:;]? `))
+      let match = msg.content.match(new RegExp(`^<@!${this.id}>[,:;]? `))
       if (match) {
         msg.content = msg.content.substring(match[0].length).trim()
         this.send(msg)
@@ -66,25 +66,35 @@ class IotaClient extends discord.Client {
             const modName = e.module.constructor.name
             const cmdName = e.command.constructor.name
 
-            const error = new discord.RichEmbed()
-              .setTitle('Internal error encountered during task execution')
-              .setColor(0xE74C3C)
-              // TODO Set footer to current version info .setFooter()
-              .addField('Message', e.error.message, true)
-              .addField('Type', e.error.constructor.name, true)
-              .addField('Source', `${modName.substring(0, modName.length - 6)}.${cmdName.substring(0, cmdName.length - 7)}`, true)
-              .addField('Stack Trace', '```' + e.error.stack + '```')
-
-            msg.channel.sendEmbed(error)
+            this.sendError(msg, e.error, cmdName, modName)
           }
         })
 
-        if (messages.length) _.each(messages, m => { msg.channel.send(m) })
+        if (messages.length) _.each(messages, m => { if (m) msg.channel.send(m instanceof discord.RichEmbed ? { embed: m } : m) })
         else msg.channel.send(this.ack())
       } else {
         msg.channel.send('I\'m not sure how to do that.')
       }
-    })
+    }).catch(e => {
+      this.sendError(msg, e)
+    }).done()
+  }
+
+  sendError (msg, e, cmdName, modName) {
+    const error = new discord.RichEmbed()
+      .setTitle('Internal error encountered during task execution')
+      .setColor(0xE74C3C)
+      // TODO Set footer to current version info .setFooter()
+      .addField('Message', e.message, true)
+      .addField('Type', e.constructor.name, true)
+
+    if (cmdName && modName) {
+      error.addField('Source', `${modName.substring(0, modName.length - 6)}.${cmdName.substring(0, cmdName.length - 7)}`, true)
+    }
+
+    error.addField('Stack Trace', '```' + e.stack + '```')
+    msg.channel.send({ embed: error })
+    return ''
   }
 
   /**

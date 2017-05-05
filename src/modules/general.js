@@ -25,7 +25,7 @@ class InfoCommand extends Client.Command {
   }
 
   handle (msg) {
-    const info = new discord.RichEmbed()
+    return new discord.RichEmbed()
       .setColor(0x00AACC)
       .setThumbnail(Bot.user.avatarURL)
       .setFooter(`${Bot.app.description}`)
@@ -39,9 +39,6 @@ class InfoCommand extends Client.Command {
       .addField('NodeJS', process.version, true)
       .addField('App', `\`${Bot.app.name}@${Bot.app.version}\``, true)
       .addField('Modules', _.map(Bot._modules, 'name').join(', '))
-    msg.channel.sendEmbed(info)
-
-    return 'It\'s nice to meet you.'
   }
 }
 
