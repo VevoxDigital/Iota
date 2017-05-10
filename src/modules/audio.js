@@ -4,6 +4,7 @@ const _ = require('lodash')
 const q = require('q')
 const discord = require('discord.js')
 const yt = require('youtube-dl')
+const ytSearch = require('youtube-search')
 
 // TODO Playlists
 const queue = { }
@@ -39,8 +40,26 @@ class PlayCommand extends Client.Command {
       })
     } else {
       // search key, need to fetch a url
-      return 'I can\'t look up keywords yet, try playing a URL'
+      args.shift()
+      return this.search(msg, args.join(' '))
     }
+  }
+
+  search (msg, query) {
+    const deferred = q.defer()
+
+    ytSearch(query, {
+      key: Bot.config.get('youtube:key'),
+      maxResults: 1,
+      type: 'video'
+    }, (err, result) => {
+      if (err) return deferred.reject(err)
+
+      result = result.pop()
+      deferred.resolve(this.handle(msg, [ 'play', result.link ]))
+    })
+
+    return deferred.promise
   }
 
   fetchVideoInfo (url) {

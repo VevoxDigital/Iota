@@ -1,5 +1,8 @@
 {
   "token": "your.token.here",
+  "youtube": {
+    "key": "your youtube API key" 
+  },
   "commands": {
     "prefix": "Iota",
     "acknowledgements": [ "Okay.", "Got it.", "Acknowledged.", "Understood.", "Confirmed." ]
