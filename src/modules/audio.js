@@ -58,9 +58,7 @@ class PlayCommand extends Client.Command {
   getVoiceConnectionFor (id, target) {
     if (queue[id].connection) return q(queue[id].connection)
 
-    const deferred = q.defer()
-    target.join().then(deferred.resolve)
-    return deferred.promise
+    return q(target.join())
   }
 
   queue (msg, info) {
@@ -84,9 +82,10 @@ class PlayCommand extends Client.Command {
 
     const id = msg.channel.guild.id
     this.getVoiceConnectionFor(id, this.getTargetChannel(msg)).then(connection => {
+      Object.defineProperty(queue[id], 'connection', { value: connection })
+
       // we either just joined or are still here
       // either way, we are not playing and should either leave or start doing so
-
       if (queue[id].length) {
         // we have something to play
         const next = queue[id][0]
@@ -186,8 +185,10 @@ class SkipCommand extends Client.Command {
   }
 
   handle (msg) {
-    dispatcher.end()
-    return Bot.ack() + (queue[msg.channel.guild.id].length ? '' : ' No songs left in queue.')
+    if (dispatcher) {
+      dispatcher.end()
+      return Bot.ack() + (queue[msg.channel.guild.id].length ? '' : ' No songs left in queue.')
+    } else return 'I\'m not playing anything.'
   }
 }
 
