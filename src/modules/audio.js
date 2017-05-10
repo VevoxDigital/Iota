@@ -192,6 +192,24 @@ class SkipCommand extends Client.Command {
   }
 }
 
+class StopCommand extends Client.Command {
+  constructor () {
+    super(/^stop playing$/i)
+
+    this.usage = 'stop playing'
+    this.desc = 'Stops playing the current song'
+  }
+
+  handle (msg) {
+    if (dispatcher) {
+      const id = msg.channel.guild.id
+      queue[id].splice(0, queue[id])
+      dispatcher.end()
+      return Bot.ack() + ' Stopped playing all songs.'
+    } else return 'I\'m not playing anything.'
+  }
+}
+
 exports = module.exports = class AudioModule extends Client.Module {
   constructor () {
     super('audio', [
@@ -199,7 +217,8 @@ exports = module.exports = class AudioModule extends Client.Module {
       new PlayCommand(),
       new PlayingCommand(),
       new QueueCommand(),
-      new SkipCommand()
+      new SkipCommand(),
+      new StopCommand()
     ])
 
     this.displayName = 'Audio'
