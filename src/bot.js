@@ -67,6 +67,7 @@ class IotaClient extends discord.Client {
             const cmdName = e.command.constructor.name
 
             this.sendError(msg, e.error, cmdName, modName)
+            messages.push('')
           }
         })
 
