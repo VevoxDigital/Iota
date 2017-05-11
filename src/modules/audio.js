@@ -123,6 +123,7 @@ class PlayCommand extends Client.Command {
         // leave if there are no songs left in queue
         dispatcher = undefined
         connection.disconnect()
+        delete queue[id].connection
       }
     })
   }
