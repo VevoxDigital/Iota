@@ -75,7 +75,6 @@ class PlayCommand extends Client.Command {
   }
 
   getVoiceConnectionFor (id, target) {
-    console.log(!!queue[id].connection)
     if (queue[id].connection) return q(queue[id].connection)
 
     return q(target.join())
