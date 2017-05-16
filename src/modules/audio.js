@@ -75,6 +75,7 @@ class PlayCommand extends Client.Command {
   }
 
   getVoiceConnectionFor (id, target) {
+    console.log(!!queue[id].connection)
     if (queue[id].connection) return q(queue[id].connection)
 
     return q(target.join())
@@ -101,7 +102,7 @@ class PlayCommand extends Client.Command {
 
     const id = msg.channel.guild.id
     this.getVoiceConnectionFor(id, this.getTargetChannel(msg)).then(connection => {
-      Object.defineProperty(queue[id], 'connection', { value: connection })
+      queue[id].connection = connection
 
       // we either just joined or are still here
       // either way, we are not playing and should either leave or start doing so
