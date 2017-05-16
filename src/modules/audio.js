@@ -33,8 +33,9 @@ class PlayCommand extends Client.Command {
   }
 
   handle (msg, args) {
-    msg.channel.send('Just a moment...')
     if (args[1].match(/^https?/i)) {
+      msg.channel.send('Just a moment...')
+
       // given a url, look up info and queue it
       return this.fetchVideoInfo(args[1]).then(info => {
         return this.queue(msg, info)
