@@ -63,8 +63,8 @@ class IotaClient extends discord.Client {
           } else {
             const e = res.reason
 
-            const modName = e.module.constructor.name
-            const cmdName = e.command.constructor.name
+            const modName = e.module ? e.module.constructor.name : 'Unknown'
+            const cmdName = e.command ? e.command.constructor.name : 'Unknown'
 
             this.sendError(msg, e.error, cmdName, modName)
             messages.push('')
