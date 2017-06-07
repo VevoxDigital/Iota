@@ -62,11 +62,12 @@ class IotaClient extends discord.Client {
             if (res.value) messages.push(res.value)
           } else {
             const e = res.reason
+            console.dir(e)
 
             const modName = e.module ? e.module.constructor.name : 'Unknown'
             const cmdName = e.command ? e.command.constructor.name : 'Unknown'
 
-            this.sendError(msg, e.error, cmdName, modName)
+            this.sendError(msg, e.error || new Error('Internal Server Error'), cmdName, modName)
             messages.push('')
           }
         })
@@ -219,11 +220,17 @@ class Module {
       _.each(c._patterns, (p, i) => {
         let match = msg.content.match(p)
         if (match) {
-          try {
-            promises.push(q(c.handle(msg, match, i)))
-          } catch (e) {
-            promises.push(q.reject({ module: this, command: c, error: e }))
-          }
+          promises.push((() => {
+            const deferred = q.defer()
+
+            c.handle(msg, match, i).then(res => {
+              deferred.resolve(res)
+            }).catch(e => {
+              deferred.reject({ module: this, command: c, error: e })
+            })
+
+            return deferred.promise
+          })())
         }
       })
     })
