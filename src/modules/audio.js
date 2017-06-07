@@ -67,7 +67,7 @@ class PlayCommand extends Client.Command {
   fetchVideoInfo (url) {
     const deferred = q.defer()
 
-    yt.getInfo(url, (err, info) => {
+    yt.getInfo(url, [ ], { maxBuffer: 500 * 1024 }, (err, info) => {
       if (err) return deferred.reject(err)
       info.link = url
       deferred.resolve(info)
