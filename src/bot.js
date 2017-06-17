@@ -223,7 +223,7 @@ class Module {
           promises.push((() => {
             const deferred = q.defer()
 
-            c.handle(msg, match, i).then(res => {
+            q(c.handle(msg, match, i)).then(res => {
               deferred.resolve(res)
             }).catch(e => {
               deferred.reject({ module: this, command: c, error: e })
