@@ -97,13 +97,47 @@ class DebugCommand extends Client.Command {
   }
 }
 
+class RollCommand extends Client.Command {
+  constructor () {
+    super([ /^roll ([d\d+-]+)$/i, /^roll (\d+)$/i ])
+
+    this.usage = 'roll <dice>'
+    this.desc = 'Rolls a dice or a set of dice'
+  }
+
+  /* eslint complexity: [1, 8] */
+  handle (msg, match, i) {
+    if (i === 0) {
+      let expression = ''
+      let sum = 0
+
+      const pattern = /([+-]?)(d?)(\d+)/g
+
+      let r
+      while ((r = pattern.exec(match[1])) !== null) {
+        const mp = r[1] === '-' ? -1 : 1
+        const num = Number.parseInt(r[3], 10)
+
+        const val = r[2] ? Math.floor(Math.random() * num) + 1 : num
+
+        sum += (mp * val)
+        expression += ` ${r[1] || '+'} ${(r[2] ? `${val}{d${num}}` : num)}`
+      }
+
+      expression += ' = ' + sum
+      return expression.substring(3)
+    } else if (i === 1) return this.handle(msg, [ match[0], 'd' + match[1] ], 0)
+  }
+}
+
 exports = module.exports = class GeneralModule extends Client.Module {
   constructor () {
     super('general', [
       new PingCommand(),
       new InfoCommand(),
       new HelpCommand(),
-      new DebugCommand()
+      new DebugCommand(),
+      new RollCommand()
     ])
 
     this.displayName = 'General'
