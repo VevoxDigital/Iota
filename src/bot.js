@@ -32,7 +32,7 @@ class IotaClient extends discord.Client {
     })
     this.on('message', msg => {
       let match = msg.content.match(new RegExp(`^<@!?${this.id}>[,:;]? `)) ||
-        msg.content.match(new RegExp(`^${this.prefix}[,:;]? `))
+        msg.content.match(new RegExp(`^${this.prefix}[,:;]? `, 'i'))
       if (match) {
         msg.content = msg.content.substring(match[0].length).trim()
         this.send(msg)
