@@ -1,7 +1,8 @@
 {
-  "name": "ryana",
-  "version": "1.0.0",
+  "name": "iota",
+  "version": "1.1.0",
   "description": "Multifunction general purpose and administration bot for Discord",
+  "productName": "Iota",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -9,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/VevoxDigital/Ryana.git"
+    "url": "git+https://github.com/VevoxDigital/Iota.git"
   },
   "author": "Vevox Digital",
   "license": "GPL-3.0",
@@ -21,9 +22,9 @@
     ]
   },
   "bugs": {
-    "url": "https://github.com/VevoxDigital/Ryana/issues"
+    "url": "https://github.com/VevoxDigital/Iota/issues"
   },
-  "homepage": "https://github.com/VevoxDigital/Ryana#readme",
+  "homepage": "https://github.com/VevoxDigital/Iota#readme",
   "dependencies": {
     "discord.js": "^11.1.0",
     "erlpack": "^0.1.2",
@@ -34,7 +35,7 @@
     "path": "^0.12.7",
     "q": "^1.5.0",
     "uws": "^0.14.5",
-    "youtube-dl": "^1.11.1",
-    "youtube-search": "^1.0.9"
+    "youtube-search": "^1.0.9",
+    "ytdl-core": "^0.14.4"
   }
 }

@@ -1,7 +1,8 @@
 {
   "token": "your.token.here",
   "youtube": {
-    "key": "your youtube API key" 
+    "key": "your youtube API key, used for searching",
+    "maxLength": "900"
   },
   "commands": {
     "prefix": "Iota",

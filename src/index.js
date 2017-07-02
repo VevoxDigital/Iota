@@ -42,7 +42,13 @@ Bot.registerModule('audio')
 
 let token = config.get('token') || ''
 
-if (!token || !token.match(/^[A-Z0-9]{24}\.[A-Z0-9]{6}\.[A-Z0-9]{27}$/i)) {
+process.on('SIGINT', () => {
+  Bot.destroy()
+})
+
+Bot.on('warn', console.warn)
+
+if (!token || !token.match(/^[A-Z0-9_-]{24}\.[A-Z0-9_-]{6}\.[A-Z0-9_-]{27}$/i)) {
   console.error('Token does not match format')
 } else {
   Bot.login(token)

@@ -3,26 +3,12 @@
 const _ = require('lodash')
 const q = require('q')
 const discord = require('discord.js')
-const yt = require('youtube-dl')
+const yt = require('ytdl-core')
 const ytSearch = require('youtube-search')
 
 // TODO Playlists
 const queue = { }
 let dispatcher
-
-/* class SummonCommand extends Client.Command {
-  constructor () {
-    super(/^come here$/i)
-
-    this.usage = 'come here'
-    this.desc = 'Joins the voice channel you\'re in.'
-  }
-
-  handle (msg) {
-    let channel
-
-  }
-} */
 
 class PlayCommand extends Client.Command {
   constructor () {
@@ -67,9 +53,11 @@ class PlayCommand extends Client.Command {
   fetchVideoInfo (url) {
     const deferred = q.defer()
 
-    yt.getInfo(url, [ ], { maxBuffer: 500 * 1024 }, (err, info) => {
+    yt.getInfo(url, (err, info) => {
       if (err) return deferred.reject(err)
       info.link = url
+      info.url = 'https://www.youtube.com/watch?v=' + info.video_id
+      info.length = Number.parseInt(info.length_seconds, 10)
       deferred.resolve(info)
     })
 
@@ -84,13 +72,9 @@ class PlayCommand extends Client.Command {
 
   queue (msg, info) {
     const id = msg.channel.guild.id
+    const maxLength = Bot.config.get('youtube:maxLength') || 600
 
-    // TODO make the length configurable
-    const maxLength = 15 * 60
-
-    const lengthParse = info.duration.split(':')
-    const length = Number.parseInt(lengthParse[1], 10) + (Number.parseInt(lengthParse[0], 10) * 60)
-    if (length > maxLength) return `That song is too long, max length is ${maxLength} seconds`
+    if (info.length > maxLength) return `That song is too long (${info.length} seconds!), maximum length is ${maxLength} seconds`
 
     queue[id] = queue[id] || [ ]
     queue[id].push({ msg: msg, info: info })
@@ -110,14 +94,17 @@ class PlayCommand extends Client.Command {
       if (queue[id].length) {
         // we have something to play
         const next = queue[id][0]
-        dispatcher = connection.playArbitraryInput(next.info.url)
+
+        let stream = yt(next.info.url, { filter: 'audioonly' })
+        dispatcher = connection.playStream(stream)
         dispatcher.setVolume(0.1)
 
         dispatcher.on('error', e => {
           Bot.sendError(msg, e, 'Audio', 'Play')
         })
 
-        dispatcher.on('end', () => {
+        dispatcher.on('end', reason => {
+          if (reason) console.log('Voice connection ended. Reason: ' + reason)
           dispatcher = undefined
           if (queue[id].length) this.playNext(queue[id].shift().msg)
         })
@@ -147,7 +134,7 @@ class PlayCommand extends Client.Command {
 
 class PlayingCommand extends Client.Command {
   constructor () {
-    super(/^(?:what'?s )playing\??$/i)
+    super(/^(?:what'?s )?playing\??$/i)
 
     this.usage = 'what\'s playing?'
     this.desc = 'Shows the current song'
@@ -160,20 +147,20 @@ class PlayingCommand extends Client.Command {
       return new discord.RichEmbed()
         .setTitle(info.title)
         .setDescription(info.description.length > 200 ? info.description.substring(0, 200) + '...' : info.description)
-        .setThumbnail(info.thumbnail)
-        .setURL(info.link)
-        .setFooter('Video ID: ' + info.id)
+        .setThumbnail(info.thumbnail_url)
+        .setURL(info.url)
+        .setFooter('Video ID: ' + info.video_id)
         .setColor(0xE67E22)
-        .addField('Author', info.uploader, true)
-        .addField('Duration', info.duration)
-        .addField('Added By', `<@!${song.msg.author.id}>`)
+        .addField('Author', info.author.name, true)
+        .addField('Duration', new Date(info.length * 1000).toISOString().slice(11, 19), true)
+        .addField('Added By', `<@!${song.msg.author.id}>`, true)
     } else return 'I am not currently playing anything'
   }
 }
 
 class QueueCommand extends Client.Command {
   constructor () {
-    super(/^(?:what'?s )queued?$/i)
+    super(/^(?:what'?s )?queued?\??$/i)
 
     this.usage = 'what\'s queued?'
     this.desc = 'Shows what\'s queued'
@@ -184,14 +171,14 @@ class QueueCommand extends Client.Command {
     if (qu.length) {
       const embed = new discord.RichEmbed()
         .setColor(0x95A5A6)
-        .addField('Now Playing', `[${qu[0].info.title}](${qu[0].info.link})`)
+        .addField('Now Playing', `[${qu[0].info.title}](${qu[0].info.url})`)
 
       let queueStr = ''
       _.each(qu.slice(1), item => {
-        queueStr += `\n[${item.info.title}](${item.info.link})`
+        queueStr += `\n * [${item.info.title}](${item.info.url})`
       })
       embed.addField('Next Up', queueStr.trim() || 'There are no other songs in queue')
-        .addField('Playlist', 'No active playlist')
+        .addField('Playlist', 'No active playlist') // TODO Playlists
 
       return embed
     } else return 'There is nothing in queue.'

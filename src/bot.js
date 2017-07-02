@@ -7,6 +7,8 @@ const q = require('q')
 
 const assert = require('assert')
 
+const app = require('../package.json')
+
 /**
   * @class IotaClient
   * A client class for Iota
@@ -26,9 +28,11 @@ class IotaClient extends discord.Client {
 
     this.once('ready', () => {
       Object.defineProperty(this, 'id', { value: this.user.id })
+      Object.defineProperty(this, 'prefix', { value: config.get('commands:prefix') || app.productName })
     })
     this.on('message', msg => {
-      let match = msg.content.match(new RegExp(`^<@!${this.id}>[,:;]? `))
+      let match = msg.content.match(new RegExp(`^<@!?${this.id}>[,:;]? `)) ||
+        msg.content.match(new RegExp(`^${this.prefix}[,:;]? `))
       if (match) {
         msg.content = msg.content.substring(match[0].length).trim()
         this.send(msg)
@@ -62,10 +66,9 @@ class IotaClient extends discord.Client {
             if (res.value) messages.push(res.value)
           } else {
             const e = res.reason
-            console.dir(e)
 
-            const modName = e.module ? e.module.constructor.name : 'Unknown'
-            const cmdName = e.command ? e.command.constructor.name : 'Unknown'
+            const modName = e.module ? e.module.constructor.name : 'UnknownModule'
+            const cmdName = e.command ? e.command.constructor.name : 'UnknownCommand'
 
             this.sendError(msg, e.error || new Error('Internal Server Error'), cmdName, modName)
             messages.push('')
@@ -83,18 +86,19 @@ class IotaClient extends discord.Client {
   }
 
   sendError (msg, e, cmdName, modName) {
+    console.error(modName, cmdName, e)
     const error = new discord.RichEmbed()
       .setTitle('Internal error encountered during task execution')
       .setColor(0xE74C3C)
-      // TODO Set footer to current version info .setFooter()
-      .addField('Message', e.message, true)
+      .setFooter(`${app.name}@${app.version}`)
       .addField('Type', e.constructor.name, true)
 
     if (cmdName && modName) {
       error.addField('Source', `${modName.substring(0, modName.length - 6)}.${cmdName.substring(0, cmdName.length - 7)}`, true)
     }
 
-    error.addField('Stack Trace', '```' + e.stack + '```')
+    error.addField('Message', '```' + e.message + '```')
+      .addField('Stack Trace', '```' + e.stack + '```')
     msg.channel.send({ embed: error })
     return ''
   }
@@ -223,11 +227,15 @@ class Module {
           promises.push((() => {
             const deferred = q.defer()
 
-            q(c.handle(msg, match, i)).then(res => {
-              deferred.resolve(res)
-            }).catch(e => {
+            try {
+              q(c.handle(msg, match, i)).then(res => {
+                deferred.resolve(res)
+              }).catch(e => {
+                deferred.reject({ module: this, command: c, error: e })
+              }).done()
+            } catch (e) {
               deferred.reject({ module: this, command: c, error: e })
-            })
+            }
 
             return deferred.promise
           })())
