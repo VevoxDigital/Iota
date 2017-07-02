@@ -187,33 +187,65 @@ class QueueCommand extends Client.Command {
 
 class SkipCommand extends Client.Command {
   constructor () {
-    super(/^skip$/i)
+    super([ /^force skip$/i, /^skip$/i ])
 
-    this.usage = 'skip'
-    this.desc = 'Skips the current song'
+    this.usage = '(force) skip'
+    this.desc = 'Skips the current song (force skip is Admin only)'
   }
 
-  handle (msg) {
+  handle (msg, match, i, override) {
+    return i === 0 ? this.skip(msg) : this.voteskip(msg)
+  }
+
+  skip (msg, override) {
+    if (!Utils.isAdmin(msg.author, msg.channel.guild) && !override) return 'I\'m sorry, but you cannot do that.'
     if (dispatcher) {
-      dispatcher.end()
+      dispatcher.end('skipped')
       return Bot.ack() + (queue[msg.channel.guild.id].length ? '' : ' No songs left in queue.')
     } else return 'I\'m not playing anything.'
+  }
+
+  voteskip (msg) {
+    const song = queue[msg.channel.guild.id][0]
+    if (song.msg.author.id === msg.author.id) return this.skip(msg, true)
+
+    song.skipVotes = song.skipVotes || [ ]
+    if (song.skipVotes.includes(msg.author.id)) return 'You already voted to skip this song.'
+    song.skipVotes.push(msg.author.id)
+
+    const connection = queue[msg.channel.guild.id].connection
+    const members = connection.channel.members.array().map(u => { return u.id })
+
+    // make sure people haven't voted then left.
+    song.skipVotes = song.skipVotes.filter(u => {
+      return members.includes(u)
+    })
+
+    // figure out how many votes we need
+    members.splice(members.indexOf(Bot.id, 1))
+    if (song.skipVotes.length > members.length / 2) return this.skip(msg, true)
+    else {
+      let needed = Math.ceil(members.length / 2)
+      if (needed === members.length / 2) needed++
+      return `Voted. **${song.skipVotes.length}** of **${needed}** needed to skip.`
+    }
   }
 }
 
 class StopCommand extends Client.Command {
   constructor () {
-    super(/^stop playing$/i)
+    super(/^stop(?: playing)?$/i)
 
     this.usage = 'stop playing'
-    this.desc = 'Stops playing the current song'
+    this.desc = 'Stops playing all songs (Admin)'
   }
 
   handle (msg) {
+    if (!Utils.isAdmin(msg.author, msg.channel.guild)) return 'I\'m sorry, but you cannot do that.'
     if (dispatcher) {
       const id = msg.channel.guild.id
       queue[id].splice(0, queue[id])
-      dispatcher.end()
+      dispatcher.end('stopped')
       return Bot.ack() + ' Stopped playing all songs.'
     } else return 'I\'m not playing anything.'
   }
@@ -222,7 +254,6 @@ class StopCommand extends Client.Command {
 exports = module.exports = class AudioModule extends Client.Module {
   constructor () {
     super('audio', [
-      // new SummonCommand(),
       new PlayCommand(),
       new PlayingCommand(),
       new QueueCommand(),
