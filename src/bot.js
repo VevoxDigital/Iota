@@ -86,7 +86,7 @@ class IotaClient extends discord.Client {
   }
 
   sendError (msg, e, cmdName, modName) {
-    console.error(modName, cmdName, e)
+    Bot.log.error(modName, cmdName, e)
     const error = new discord.RichEmbed()
       .setTitle('Internal error encountered during task execution')
       .setColor(0xE74C3C)
@@ -124,7 +124,7 @@ class IotaClient extends discord.Client {
   registerModule (name) {
     assert.ok(name, 'Name should not be empty') // Still need an empty check here
 
-    return this.registerNpmModule(path.join(Utils.src, 'modules', name))
+    return this.registerNpmModule(path.join(Util.SRCDIR, 'modules', name))
   }
 
   /**
@@ -144,7 +144,7 @@ class IotaClient extends discord.Client {
     if (!(mod instanceof Module) || !mod.name) throw new Error('Not valid module')
     this._modules.push(mod)
 
-    console.log(` * loaded: ${mod.name}`)
+    Bot.log.info(` * loaded: ${mod.name}`)
 
     return this
   }

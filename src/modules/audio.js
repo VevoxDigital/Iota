@@ -104,7 +104,7 @@ class PlayCommand extends Client.Command {
         })
 
         dispatcher.on('end', reason => {
-          if (reason) console.log('Voice connection ended. Reason: ' + reason)
+          if (reason) Bot.log.verbose('Voice connection ended. Reason: ' + reason)
           dispatcher = undefined
           if (queue[id].length) this.playNext(queue[id].shift().msg)
         })
@@ -198,7 +198,7 @@ class SkipCommand extends Client.Command {
   }
 
   skip (msg, override) {
-    if (!Utils.isAdmin(msg.author, msg.channel.guild) && !override) return 'I\'m sorry, but you cannot do that.'
+    if (!Util.user.isAdmin(msg.author, msg.channel.guild) && !override) return 'I\'m sorry, but you cannot do that.'
     if (dispatcher) {
       dispatcher.end('skipped')
       return Bot.ack() + (queue[msg.channel.guild.id].length ? '' : ' No songs left in queue.')
@@ -241,7 +241,7 @@ class StopCommand extends Client.Command {
   }
 
   handle (msg) {
-    if (!Utils.isAdmin(msg.author, msg.channel.guild)) return 'I\'m sorry, but you cannot do that.'
+    if (!Util.user.isAdmin(msg.author, msg.channel.guild)) return 'I\'m sorry, but you cannot do that.'
     if (dispatcher) {
       const id = msg.channel.guild.id
       queue[id].splice(0, queue[id])
