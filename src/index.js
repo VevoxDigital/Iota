@@ -6,6 +6,7 @@ const config = require('nconf')
 
 const SRCDIR = __dirname
 const ROOTDIR = path.join(SRCDIR, '..')
+const DATADIR = path.join(ROOTDIR, 'data')
 
 global.Utils = require('./utils')
 global.Client = require('./bot')
@@ -15,14 +16,14 @@ try {
   if (!stats.isFile()) throw new Error()
 } catch (e) {
   try {
-    fs.copySync(path.join(ROOTDIR, 'config.default.json'), path.join(ROOTDIR, 'config.json'))
+    fs.copySync(path.join(ROOTDIR, 'config.default.json'), path.join(DATADIR, 'config.json'))
   } catch (e2) {
     console.error('Failed to copy config defaults')
     console.error(e.stack)
   }
 }
 
-config.argv().env().file({ file: path.join(ROOTDIR, 'config.json') })
+config.argv().env().file({ file: path.join(DATADIR, 'config.json') })
 
 global.Bot = new Client.IotaClient(config)
 Bot.app = require('../package.json')

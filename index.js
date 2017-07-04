@@ -1,2 +1,2 @@
-console.log('Hello world!');
-require('./src');
+console.log('Hello world!')
+require('./src')
