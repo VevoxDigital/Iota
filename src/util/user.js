@@ -12,7 +12,7 @@ const config = require('nconf')
   */
 exports.isAdmin = (user, guild) => {
   let mods = config.get('admins') || []
-  if (guild) mods = mods.concat((exports.configKey(guild.id, 'admin') + 'admins') || [])
+  if (guild) mods = mods.concat((Util.configKey(guild.id, 'admin') + 'admins') || [])
 
   return mods.indexOf(user.id) >= 0
 }
