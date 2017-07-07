@@ -139,15 +139,15 @@ class PlayingCommand extends Client.Command {
       const info = song.info
       return new discord.RichEmbed()
         .setTitle(info.title)
-        .setDescription(info.description.length > 200 ? info.description.substring(0, 200) + '...' : info.description)
+        .setDescription('```' + (info.description.length > 200 ? info.description.substring(0, 200) + '...' : info.description) + '```')
         .setThumbnail(info.thumbnail_url)
         .setURL(info.url)
         .setFooter('Video ID: ' + info.video_id)
         .setColor(0xE67E22)
         .addField('Author', info.author.name, true)
+        .addField('Added By', `<@${song.msg.author.id}>`, true)
         .addField('Duration', new Date(info.length * 1000).toISOString().slice(11, 19), true)
         .addField('Playing For', new Date(dispatcher.time * 1000).toISOString().slice(11, 19), true)
-        .addField('Added By', `<@!${song.msg.author.id}>`, true)
     } else return 'I am not currently playing anything'
   }
 }
@@ -172,7 +172,9 @@ class QueueCommand extends Client.Command {
         queueStr += `\n * [${item.info.title}](${item.info.url})`
       })
       embed.addField('Next Up', queueStr.trim() || 'There are no other songs in queue')
-        .addField('Playlist', activePlaylist[msg.guild.id] ? activePlaylist[msg.guild.id].title : 'No active playlist')
+        .addField('Playlist', activePlaylist[msg.guild.id]
+          ? `\`${activePlaylist[msg.guild.id].title}\` by <@${activePlaylist[msg.guild.id].owner}>`
+          : 'No active playlist')
 
       return embed
     } else return 'There is nothing in queue.'
