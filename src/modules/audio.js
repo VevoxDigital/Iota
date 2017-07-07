@@ -310,6 +310,8 @@ class PlaylistCommand extends Client.Command {
   delete (msg, args) {
     const pl = this.getPlaylists(msg.guild.id)
 
+    if (msg.author.id !== pl.owner && !Util.user.isAdmin(msg.author)) return 'You do not own this playlist.'
+
     if (!pl[args[2].toLowerCase()]) return 'No playlist by that name exists.'
     delete pl[args[2].toLowerCase()]
 
@@ -322,7 +324,7 @@ class PlaylistCommand extends Client.Command {
     const pl = pls[args[1].toLowerCase()]
     if (!pl) return 'No playlist by that name exists.'
 
-    if (msg.author.id !== pl.owner) return 'You do not own this playlist.'
+    if (msg.author.id !== pl.owner && !Util.user.isAdmin(msg.author)) return 'You do not own this playlist.'
 
     switch (args[2]) {
       case 'add': return this.updateAdd(msg, args[3], pl, args[1].toLowerCase(), pls)
