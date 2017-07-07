@@ -36,17 +36,19 @@ function playNext (msg) {
       const next = queue[id][0]
 
       let stream = yt(next.info.url, { filter: 'audioonly' })
-      dispatcher = connection.playStream(stream)
-      dispatcher.setVolume(0.1)
+      dispatcher = connection.playStream(stream, { seek: 0, volume: 0.1 })
 
+      dispatcher.player.on('warn', console.warn)
+      dispatcher.on('warn', console.warn)
       dispatcher.on('error', e => {
         Bot.sendError(msg, e, 'Audio', 'Play')
       })
 
-      dispatcher.on('end', reason => {
-        if (reason) Bot.log.verbose(id + ': voice connection ended. Reason: ' + reason)
+      dispatcher.once('end', reason => {
+        Bot.log.verbose(id + ': dispatcher ended, ' + (reason || 'no reason'))
         dispatcher = undefined
-        if (queue[id].length) playNext(queue[id].shift().msg)
+        // wait half a second due to a bug is Discord.js, see issue #1387
+        if (queue[id].length) setTimeout(() => { playNext(queue[id].shift().msg) }, 500)
       })
     } else if (activePlaylist[id]) {
       Bot.log.verbose(id + ': queue empty, queueing from active playlist')
@@ -144,6 +146,7 @@ class PlayingCommand extends Client.Command {
         .setColor(0xE67E22)
         .addField('Author', info.author.name, true)
         .addField('Duration', new Date(info.length * 1000).toISOString().slice(11, 19), true)
+        .addField('Playing For', new Date(dispatcher.time * 1000).toISOString().slice(11, 19), true)
         .addField('Added By', `<@!${song.msg.author.id}>`, true)
     } else return 'I am not currently playing anything'
   }
