@@ -169,7 +169,7 @@ class QueueCommand extends Client.Command {
         queueStr += `\n * [${item.info.title}](${item.info.url})`
       })
       embed.addField('Next Up', queueStr.trim() || 'There are no other songs in queue')
-        .addField('Playlist', activePlaylist ? activePlaylist[msg.guild.id].title : 'No active playlist')
+        .addField('Playlist', activePlaylist[msg.guild.id] ? activePlaylist[msg.guild.id].title : 'No active playlist')
 
       return embed
     } else return 'There is nothing in queue.'
