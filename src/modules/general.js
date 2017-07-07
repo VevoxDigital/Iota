@@ -18,7 +18,7 @@ class PingCommand extends Client.Command {
 
 class InfoCommand extends Client.Command {
   constructor () {
-    super([ /^who (?:are you)?\??/i, /^introduce yourself$/i ])
+    super([ /^who(?: are you)?\??/i, /^introduce yourself$/i ])
 
     this.usage = 'who (are you)?'
     this.desc = 'Explains who she is'
