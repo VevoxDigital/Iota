@@ -147,7 +147,7 @@ class PlayingCommand extends Client.Command {
         .addField('Author', info.author.name, true)
         .addField('Added By', `<@${song.msg.author.id}>`, true)
         .addField('Duration', new Date(info.length * 1000).toISOString().slice(11, 19), true)
-        .addField('Playing For', new Date(dispatcher.time * 1000).toISOString().slice(11, 19), true)
+        .addField('Playing For', new Date(dispatcher.time).toISOString().slice(11, 19), true)
     } else return 'I am not currently playing anything'
   }
 }
