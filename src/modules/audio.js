@@ -173,7 +173,7 @@ class QueueCommand extends Client.Command {
       })
       embed.addField('Next Up', queueStr.trim() || 'There are no other songs in queue')
         .addField('Playlist', activePlaylist[msg.guild.id]
-          ? `\`${activePlaylist[msg.guild.id].title}\` by <@${activePlaylist[msg.guild.id].owner}>`
+          ? `\`${activePlaylist[msg.guild.id].title}\` by <@${activePlaylist[msg.guild.id].playlist.owner}>`
           : 'No active playlist')
 
       return embed
@@ -241,6 +241,7 @@ class StopCommand extends Client.Command {
     if (dispatcher) {
       const id = msg.channel.guild.id
       queue[id].splice(0, queue[id])
+      delete activePlaylist[id]
       dispatcher.end('stopped')
       return Bot.ack() + ' Stopped playing all songs.'
     } else return 'I\'m not playing anything.'
@@ -387,7 +388,7 @@ class PlaylistCommand extends Client.Command {
     const pl = this.getPlaylists(msg.guild.id)[args[1].toLowerCase()]
     if (!pl) return 'No playlist by that name exists.'
 
-    activePlaylist[msg.guild.id] = Object.assign(activePlaylist[msg.guilds.id] || { }, { currentIndex: 0, playlist: pl, title: args[1].toLowerCase() })
+    activePlaylist[msg.guild.id] = Object.assign(activePlaylist[msg.guild.id] || { }, { currentIndex: 0, playlist: pl, title: args[1].toLowerCase() })
     shuffle(activePlaylist[msg.guild.id].playlists.songs)
     playNext(msg)
   }
