@@ -389,7 +389,7 @@ class PlaylistCommand extends Client.Command {
     if (!pl) return 'No playlist by that name exists.'
 
     activePlaylist[msg.guild.id] = Object.assign(activePlaylist[msg.guild.id] || { }, { currentIndex: 0, playlist: pl, title: args[1].toLowerCase() })
-    shuffle(activePlaylist[msg.guild.id].playlists.songs)
+    shuffle(activePlaylist[msg.guild.id].playlist.songs)
     playNext(msg)
   }
 
@@ -441,12 +441,7 @@ class PlaylistCommand extends Client.Command {
       list += `\n${i + 1}. [${song.title}](${song.url})`
     }
 
-    return new discord.RichEmbed()
-      .setTitle(`Playlist "${args[1].toLowerCase()}"`)
-      .setFooter('Server ID: ' + msg.guild.id)
-      .addField('Owner', `<@${pl.owner}>`, true)
-      .addField('Song Count', pl.songs.length, true)
-      .addField('Songs', list.trim())
+    return `**${args[1].toLowerCase()}** by <@!${pl.owner}> (${pl.slongs.length} song(s))\n\`\`\`${list.trim()}\`\`\``
   }
 }
 
