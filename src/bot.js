@@ -81,7 +81,9 @@ class IotaClient extends discord.Client {
         msg.channel.send('I\'m not sure how to do that.')
       }
     }).catch(e => {
-      this.sendError(msg, e)
+      if (typeof e === 'string') {
+        msg.channel.send(e)
+      } else this.sendError(msg, e)
     }).done()
   }
 

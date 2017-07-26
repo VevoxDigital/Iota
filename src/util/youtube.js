@@ -46,6 +46,7 @@ exports.search = query => {
   }, (err, result) => {
     if (err) return deferred.reject(err)
     result = result.pop()
+    if (!result) return deferred.reject('Could not download results for query')
     deferred.resolve(result.link)
   })
 
