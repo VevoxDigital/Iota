@@ -1,6 +1,6 @@
 {
   "name": "iota",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Multifunction general purpose and administration bot for Discord",
   "productName": "Iota",
   "main": "index.js",
