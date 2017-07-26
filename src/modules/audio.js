@@ -9,12 +9,12 @@ const fs = require('fs-extra')
 
 const queue = { }
 const activePlaylist = { }
-let dispatcher
+const dispatcher = { }
 
 function playNext (msg) {
-  if (dispatcher) return // something is already playing
-
   const id = msg.guild.id
+
+  if (dispatcher[id]) return // something is already playing
 
   getVoiceConnectionFor(id, getTargetChannel(msg)).then(connection => {
     queue[id] = queue[id] || [ ]
@@ -23,9 +23,7 @@ function playNext (msg) {
     // check if Iota is alone, and leave if so
     if (connection.channel.members.array().length <= 1) {
       Bot.log.verbose(id + ': channel appears to be empty, leaving')
-      delete queue[id]
-      delete activePlaylist[id]
-      return playNext(msg)
+      return leaveChannel(id)
     }
 
     // we either just joined or are still here
@@ -36,17 +34,17 @@ function playNext (msg) {
       const next = queue[id][0]
 
       let stream = yt(next.info.url, { filter: 'audioonly' })
-      dispatcher = connection.playStream(stream, { seek: 0, volume: 0.1 })
+      dispatcher[id] = connection.playStream(stream, { seek: 0, volume: 0.1 })
 
-      dispatcher.player.on('warn', console.warn)
-      dispatcher.on('warn', console.warn)
-      dispatcher.on('error', e => {
+      dispatcher[id].player.on('warn', console.warn)
+      dispatcher[id].on('warn', console.warn)
+      dispatcher[id].on('error', e => {
         Bot.sendError(msg, e, 'Audio', 'Play')
       })
 
-      dispatcher.once('end', reason => {
+      dispatcher[id].once('end', reason => {
         Bot.log.verbose(id + ': dispatcher ended, ' + (reason || 'no reason'))
-        dispatcher = undefined
+        delete dispatcher[msg.guild.id]
         // wait half a second due to a bug is Discord.js, see issue #1387
         if (queue[id].length) setTimeout(() => { playNext(queue[id].shift().msg) }, 500)
       })
@@ -68,13 +66,20 @@ function playNext (msg) {
     } else {
       Bot.log.verbose(id + ': queue empty and no active playlist, leaving')
       // leave if there are no songs left in queue
-      dispatcher = undefined
-      connection.disconnect()
-      delete queue[id].connection
+      leaveChannel(id)
     }
   }).catch(e => {
     Bot.sendError(msg, e, 'playNextCommand', 'AudioModule')
   }).done()
+}
+
+function leaveChannel (id) {
+  const connection = queue[id].connection
+  delete queue[id]
+  delete activePlaylist[id]
+
+  dispatcher[id] = undefined
+  connection.disconnect()
 }
 
 function getTargetChannel (msg) {
@@ -147,7 +152,7 @@ class PlayingCommand extends Client.Command {
         .addField('Author', info.author.name, true)
         .addField('Added By', `<@${song.msg.author.id}>`, true)
         .addField('Duration', new Date(info.length * 1000).toISOString().slice(11, 19), true)
-        .addField('Playing For', new Date(dispatcher.time).toISOString().slice(11, 19), true)
+        .addField('Playing For', new Date(dispatcher[msg.guild.id].time).toISOString().slice(11, 19), true)
     } else return 'I am not currently playing anything'
   }
 }
@@ -195,8 +200,8 @@ class SkipCommand extends Client.Command {
 
   skip (msg, override) {
     if (!Util.user.isAdmin(msg.author, msg.channel.guild) && !override) return 'I\'m sorry, but you cannot do that.'
-    if (dispatcher) {
-      dispatcher.end('skipped')
+    if (dispatcher[msg.guild.id]) {
+      dispatcher[msg.guild.id].end('skipped')
       return Bot.ack() + (queue[msg.guild.id].length || activePlaylist[msg.guild.id] ? '' : ' No songs left in queue.')
     } else return 'I\'m not playing anything.'
   }
@@ -238,11 +243,11 @@ class StopCommand extends Client.Command {
 
   handle (msg) {
     if (!Util.user.isAdmin(msg.author, msg.channel.guild)) return 'I\'m sorry, but you cannot do that.'
-    if (dispatcher) {
+    if (dispatcher[msg.guild.id]) {
       const id = msg.channel.guild.id
       queue[id].splice(0, queue[id])
       delete activePlaylist[id]
-      dispatcher.end('stopped')
+      dispatcher[msg.guild.id].end('stopped')
       return Bot.ack() + ' Stopped playing all songs.'
     } else return 'I\'m not playing anything.'
   }
